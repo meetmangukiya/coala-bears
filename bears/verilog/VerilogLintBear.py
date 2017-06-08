@@ -1,4 +1,6 @@
 from coalib.bearlib.abstractions.Linter import linter
+from dependency_management.requirements.DistributionRequirement import (
+    DistributionRequirement)
 
 
 @linter(executable='verilator',
@@ -20,7 +22,22 @@ class VerilogLintBear:
     This is done using the ``--lint-only`` command. For more information visit
     <http://www.veripool.org/projects/verilator/wiki/Manual-verilator>.
     """
-    LANGUAGES = {"Verilog"}
+    LANGUAGES = {'Verilog'}
+    REQUIREMENTS = {
+        DistributionRequirement(
+            apt_get='verilator',
+            brew=None,
+            dnf='verilator',
+            portage=None,
+            yum='verilator',
+            zypper='verilator',
+        ),
+    }
+    AUTHORS = {'The coala developers'}
+    AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
+    LICENSE = 'AGPL-3.0'
+    ASCIINEMA_URL = 'https://asciinema.org/a/45275'
+    CAN_DETECT = {'Formatting', 'Code Simplification', 'Syntax', 'Unused Code'}
 
     @staticmethod
     def create_arguments(filename, file, config_file):

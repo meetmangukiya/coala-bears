@@ -15,13 +15,14 @@ environment:
       PYTHON_ARCH: "64"
 
 cache:
-  - "C:\\wheels"
+  - "C:\\pip_cache"
   - "node_modules"
+  - "C:\\Users\\appveyor\\AppData\\Local\\coala-bears\\coala-bears"
+  - "C:\\Users\\appveyor\\AppData\\Roaming\\nltk_data"
 
-branches:  # Only build official branches, PRs are built anyway.
-  only:
-    - master
-    - /release.*/
+branches:
+  except:
+    - /^sils\/.*/
 
 install:
   # Prepend newly installed Python to the PATH of this build (this cannot be
@@ -39,22 +40,8 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  - "%CMD_IN_ENV% pip install wheel"
-  # Create c:/wheels if it does not exist.
-  - ps: If ( -not (Test-Path C:\\wheels) )  { mkdir C:\\wheels }
-  - ECHO "Cached wheels:"
-  - ps: "ls \"C:\\wheels\""
-  - "%CMD_IN_ENV% pip wheel --use-wheel --wheel-dir C:\\wheels --find-links C:\\wheels -r test-requirements.txt"
-  - "%CMD_IN_ENV% pip wheel --use-wheel --wheel-dir C:\\wheels --find-links C:\\wheels -r requirements.txt"
-  - "%CMD_IN_ENV% pip install --find-links=C:\\wheels -r test-requirements.txt"
-  - "%CMD_IN_ENV% pip install --find-links=C:\\wheels -r requirements.txt"
-  - "%CMD_IN_ENV% pip install --upgrade astroid"
-  # Download required nltk data
-  - "python -m nltk.downloader punkt"
-  - "python -m nltk.downloader maxent_treebank_pos_tagger"
-  - "python -m nltk.downloader averaged_perceptron_tagger"
-  # Calling setup.py will download checkstyle automatically so tests may succeed
-  - "%CMD_IN_ENV% python setup.py --help"
+
+  - "%CMD_IN_ENV% pip install --cache-dir=C:\\pip_cache -r requirements.txt -r test-requirements.txt"
 
   - ps: "Install-Product node ''"  # Use latest node v5.x.x
   - "npm config set loglevel warn"
@@ -63,6 +50,10 @@ install:
 build: false  # Not a C# project, build stuff at the test step instead.
 
 test_script:
+  # Force DOS format, as Checkstyle configs enable NewlineAtEndOfFile,
+  # which defaults to CRLF on Windows, and Appveyor CI ignores .gitattributes
+  # http://help.appveyor.com/discussions/problems/5687-gitattributes-changes-dont-have-any-effect
+  - unix2dos tests/java/test_files/CheckstyleGood.java
   # Clang DLLs x64 were nowadays installed, but the x64 version hangs, so we
   # exclude according tests. See https://github.com/appveyor/ci/issues/495 and
   # https://github.com/appveyor/ci/issues/688

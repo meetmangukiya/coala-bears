@@ -1,4 +1,5 @@
 from coalib.bearlib.abstractions.Linter import linter
+from dependency_management.requirements.NpmRequirement import NpmRequirement
 from coalib.settings.Setting import typed_list
 
 
@@ -17,7 +18,12 @@ class BootLintBear:
     For more about the analysis, check Bootlint
     <https://github.com/twbs/bootlint#bootlint>.
     """
-    LANGUAGES = {"HTML"}
+    LANGUAGES = {'HTML'}
+    REQUIREMENTS = {NpmRequirement('bootlint', '0')}
+    AUTHORS = {'The coala developers'}
+    AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
+    LICENSE = 'AGPL-3.0'
+    CAN_DETECT = {'Formatting', 'Syntax'}
 
     @staticmethod
     def create_arguments(filename, file, config_file,

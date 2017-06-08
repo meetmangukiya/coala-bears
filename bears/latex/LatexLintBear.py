@@ -1,4 +1,6 @@
 from coalib.bearlib.abstractions.Linter import linter
+from dependency_management.requirements.DistributionRequirement import (
+    DistributionRequirement)
 
 
 @linter(executable='chktex',
@@ -9,8 +11,17 @@ class LatexLintBear:
     """
     Checks the code with ``chktex``.
     """
-    LANGUAGES = {"Tex"}
+    LANGUAGES = {'Tex'}
+    REQUIREMENTS = {DistributionRequirement('chktex', zypper='texlive-chktex')}
+    AUTHORS = {'The coala developers'}
+    AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
+    LICENSE = 'AGPL-3.0'
+    CAN_DETECT = {'Syntax', 'Formatting'}
 
     @staticmethod
     def create_arguments(filename, file, config_file):
-        return filename,
+        return (
+            '--format',
+            '%k %n in {0} line %l: %m!n'.format(filename),
+            filename,
+        )

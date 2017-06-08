@@ -22,8 +22,14 @@ def clang_available(cls):
 
 
 class ClangBear(LocalBear):
-    LANGUAGES = {"C", "C++", "Objective-C", "Objective-C++", "OpenMP",
-                 "OpenCL", "CUDA"}
+    LANGUAGES = {'C', 'C++', 'Objective-C', 'Objective-C++', 'OpenMP',
+                 'OpenCL', 'CUDA'}
+    # Depends on libclang-py3, which is a dependency of coala
+    REQUIREMENTS = set()
+    AUTHORS = {'The coala developers'}
+    AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
+    LICENSE = 'AGPL-3.0'
+    CAN_FIX = {'Variable Misuse', 'Syntax'}
 
     check_prerequisites = classmethod(clang_available)
 
@@ -62,7 +68,7 @@ class ClangBear(LocalBear):
                     affected_code = diffs[filename].affected_code(filename)
 
             # Still no affected code? Position is the best we can get...
-            if len(affected_code) == 0:
+            if len(affected_code) == 0 and diag.location.file is not None:
                 affected_code = (SourceRange.from_values(
                     diag.location.file.name,
                     diag.location.line,

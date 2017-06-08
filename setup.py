@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 
-# Start ignoring PyImportSortBear as imports below may yield syntax errors
-from bears import assert_supported_version
-assert_supported_version()
-# Stop ignoring
-
 import locale
 import sys
 from subprocess import call
@@ -43,35 +38,46 @@ class BuildDocsCommand(setuptools.command.build_py.build_py):
 
 with open('requirements.txt') as requirements:
     required = requirements.read().splitlines()
+    required.remove('-r bear-requirements.txt')
+
+with open('bear-requirements.txt') as requirements:
+    bear_required = requirements.read().splitlines()
 
 with open('test-requirements.txt') as requirements:
     test_required = requirements.read().splitlines()
 
-with open("README.rst") as readme:
+with open('README.rst') as readme:
     long_description = readme.read()
 
+extras_require = {
+    'alldeps': bear_required,
+}
+required += [req for req in bear_required
+             if not req.startswith('language-check')]
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     setup(name='coala-bears',
           version=Constants.VERSION,
           description='Bears for coala (Code Analysis Application)',
-          author="The coala developers",
-          maintainer="Lasse Schuirmann, Fabian Neuschmidt, Mischa Kr\xfcger",
+          author='The coala developers',
+          maintainer='Lasse Schuirmann, Fabian Neuschmidt, Mischa Kr\xfcger',
           maintainer_email=('lasse.schuirmann@gmail.com, '
                             'fabian@neuschmidt.de, '
                             'makman@alice.de'),
           url='http://coala.rtfd.org/',
           platforms='any',
-          packages=find_packages(exclude=("build.*", "tests", "tests.*")),
+          packages=find_packages(exclude=('build.*', 'tests', 'tests.*')),
           install_requires=required,
+          extras_require=extras_require,
           tests_require=test_required,
-          package_data={'bears': ["VERSION"],
+          package_data={'bears': ['VERSION'],
                         'bears.java': ['checkstyle.jar', 'google_checks.xml'],
                         'bears.scala': ['scalastyle.jar',
                                         'scalastyle_config.xml']},
-          license="AGPL-3.0",
+          license='AGPL-3.0',
           long_description=long_description,
-          entry_points={"coalabears": ["coala_official_bears = bears"]},
+          entry_points={'coalabears': ['coala_official_bears = bears']},
           # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
           classifiers=[
               'Development Status :: 4 - Beta',
@@ -90,7 +96,6 @@ if __name__ == "__main__":
               'Operating System :: OS Independent',
 
               'Programming Language :: Python :: Implementation :: CPython',
-              'Programming Language :: Python :: 3.3',
               'Programming Language :: Python :: 3.4',
               'Programming Language :: Python :: 3.5',
               'Programming Language :: Python :: 3 :: Only',

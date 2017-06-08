@@ -1,7 +1,7 @@
 import os
 
 from bears.js.ESLintBear import ESLintBear
-from tests.LocalBearTestHelper import verify_local_bear
+from coalib.testing.LocalBearTestHelper import verify_local_bear
 
 
 test_good = """function addOne(i) {
@@ -12,7 +12,7 @@ test_good = """function addOne(i) {
 }
 
 addOne(3);
-""".splitlines(True)
+"""
 
 test_bad = """function addOne(i) {
     if (i != NaN) {
@@ -22,20 +22,48 @@ test_bad = """function addOne(i) {
         return
     }
 };
-""".splitlines(True)
+"""
 
-test_syntax_error = ('{<!@3@^ yeah!/\n',)
+test_import_good = """
+import test from "./test";
 
-eslintconfig = os.path.join(os.path.dirname(__file__),
-                            "test_files",
-                            "eslintconfig.json")
+test();
+"""
 
-ESLintBearTestWithConfig = verify_local_bear(ESLintBear,
-                                             valid_files=(test_good,),
-                                             invalid_files=(test_bad,),
-                                             settings={"eslint_config":
-                                                       eslintconfig})
+test_import_bad = """
+import test from "../test";
 
-ESLintBearWithoutConfig = verify_local_bear(ESLintBear,
-                                            valid_files=(test_good, test_bad),
-                                            invalid_files=(test_syntax_error,))
+test();
+"""
+
+test_syntax_error = '{<!@3@^ yeah!/\n'
+
+test_dir = os.path.join(os.path.dirname(__file__), 'test_files')
+
+ESLintBearWithConfigTest = verify_local_bear(
+    ESLintBear,
+    valid_files=('',),
+    invalid_files=(test_bad, test_good),
+    settings={'eslint_config': os.path.join(test_dir, 'eslintconfig.json')})
+
+ESLintBearWithoutConfigTest = verify_local_bear(
+    ESLintBear,
+    valid_files=(test_good, ''),
+    invalid_files=(test_syntax_error, test_bad))
+
+# If there is an invalid config file, the results cannot be found. So, no
+# file gives a result.
+ESLintBearWithUnloadablePluginTest = verify_local_bear(
+    ESLintBear,
+    valid_files=(test_bad, test_good),
+    invalid_files=(),
+    settings={'eslint_config': os.path.join(test_dir,
+                                            'eslintconfig_badplugin.json')})
+ESLintBearImportTest = verify_local_bear(
+    ESLintBear,
+    valid_files=(test_import_good, ),
+    invalid_files=(test_import_bad, ),
+    filename=os.path.join(test_dir, 'test.js'),
+    create_tempfile=False,
+    settings={'eslint_config': os.path.join(test_dir,
+                                            'eslintconfig_import.json')})

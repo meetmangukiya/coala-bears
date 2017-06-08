@@ -1,12 +1,16 @@
 import json
+import re
 
 from coalib.bearlib.abstractions.Linter import linter
+from dependency_management.requirements.NpmRequirement import NpmRequirement
+from coalib.results.RESULT_SEVERITY import RESULT_SEVERITY
+from coalib.bearlib import deprecate_settings
 
 
 @linter(executable='remark',
         use_stdin=True,
-        output_format='corrected',
-        result_message='The text does not comply to the set style.')
+        use_stdout=True,
+        use_stderr=True)
 class MarkdownBear:
     """
     Check and correct Markdown style violations automatically.
@@ -15,87 +19,137 @@ class MarkdownBear:
     below.
     """
 
-    LANGUAGES = {"Markdown"}
+    LANGUAGES = {'Markdown'}
+    REQUIREMENTS = {NpmRequirement('remark-cli', '2'),
+                    NpmRequirement('remark-lint', '5')}
+    AUTHORS = {'The coala developers'}
+    AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
+    LICENSE = 'AGPL-3.0'
+    CAN_FIX = {'Formatting'}
+
+    _output_regex = re.compile(
+        r'\s*(?P<line>\d+):(?P<column>\d+)'
+        r'\s*(?P<severity>warning)\s*(?P<message>.*)')
 
     @staticmethod
+    @deprecate_settings(bullets='markdown_bullets',
+                        closed_headings='markdown_closed_headings',
+                        setext_headings='markdown_setext_headings',
+                        emphasis='markdown_emphasis',
+                        strong='markdown_strong',
+                        encode_entities='markdown_encode_entities',
+                        codefence='markdown_codefence',
+                        fences='markdown_fences',
+                        list_indent='markdown_list_indent',
+                        loose_tables='markdown_loose_tables',
+                        spaced_tables='markdown_spaced_tables',
+                        list_increment='markdown_list_increment',
+                        horizontal_rule='markdown_horizontal_rule',
+                        horizontal_rule_spaces='markdown_horizontal_'
+                                               'rule_spaces',
+                        horizontal_rule_repeat='markdown_horizontal_'
+                                               'rule_repeat')
     def create_arguments(filename, file, config_file,
-                         markdown_bullets: str="-",
-                         markdown_closed_headings: bool=False,
-                         markdown_setext_headings: bool=False,
-                         markdown_emphasis: str="*",
-                         markdown_strong: str="*",
-                         markdown_encode_entities: bool=False,
-                         markdown_codefence: str="`",
-                         markdown_fences: bool=True,
-                         markdown_list_indent: str="1",
-                         markdown_loose_tables: bool=False,
-                         markdown_spaced_tables: bool=True,
-                         markdown_list_increment: bool=True,
-                         markdown_horizontal_rule: str='*',
-                         markdown_horizontal_rule_spaces: bool=False,
-                         markdown_horizontal_rule_repeat: int=3):
+                         bullets: str='-',
+                         closed_headings: bool=False,
+                         setext_headings: bool=False,
+                         emphasis: str='*',
+                         strong: str='*',
+                         encode_entities: bool=False,
+                         codefence: str='`',
+                         fences: bool=True,
+                         list_indent: str='1',
+                         loose_tables: bool=False,
+                         spaced_tables: bool=True,
+                         list_increment: bool=True,
+                         horizontal_rule: str='*',
+                         horizontal_rule_spaces: bool=False,
+                         horizontal_rule_repeat: int=3,
+                         max_line_length: int=None):
         """
-        :param markdown_bullets:
+        :param bullets:
             Character to use for bullets in lists. Can be "-", "*" or "+".
-        :param markdown_closed_headings:
+        :param closed_headings:
             Whether to close Atx headings or not. if true, extra # marks will
             be required after the heading. eg: `## Heading ##`.
-        :param markdown_setext_headings:
+        :param setext_headings:
             Whether to use setext headings. A setext heading uses underlines
             instead of # marks.
-        :param markdown_emphasis:
+        :param emphasis:
             Character to wrap strong emphasis by. Can be "_" or "*".
-        :param markdown_strong:
+        :param strong:
             Character to wrap slight emphasis by. Can be "_" or "*".
-        :param markdown_encode_entities:
+        :param encode_entities:
             Whether to encode symbols that are not ASCII into special HTML
             characters.
-        :param markdown_codefence:
+        :param codefence:
             Used to find which characters to use for code fences. Can be "`" or
             "~".
-        :param markdown_fences:
+        :param fences:
             Use fences for code blocks.
-        :param markdown_list_indent:
+        :param list_indent:
             Used to find spacing after bullet in lists. Can be "1", "tab" or
             "mixed".
-
             - "1" - 1 space after bullet.
             - "tab" - Use tab stops to begin a sentence after the bullet.
             - "mixed" - Use "1" when the list item is only 1 line, "tab" if it
               spans multiple.
-        :param markdown_loose_tables:
+        :param loose_tables:
             Whether to use pipes for the outermost borders in a table.
-        :param markdown_spaced_tables:
+        :param spaced_tables:
             Whether to add space between pipes in a table.
-        :param markdown_list_increment:
+        :param list_increment:
             Whether an ordered lists numbers should be incremented.
         :param markdown_horizontal_rule:
             The horizontal rule character. Can be '*', '_' or '-'.
-        :param markdown_horizontal_rule_spaces:
+        :param horizontal_rule_spaces:
             Whether spaces should be added between horizontal rule characters.
-        :param markdown_horizontal_rule_repeat:
+        :param horizontal_rule_repeat:
             The number of times the horizontal rule character will be repeated.
+        :param max_line_length:
+            The maximum line length allowed.
         """
-        remark_configs = {
-            "bullet": markdown_bullets,                         # - or *
-            "closeAtx": markdown_closed_headings,               # Bool
-            "setext": markdown_setext_headings,                 # Bool
-            "emphasis": markdown_emphasis,                      # char (_ or *)
-            "strong": markdown_strong,                          # char (_ or *)
-            "entities": markdown_encode_entities,               # Bool
-            "fence": markdown_codefence,                        # char (~ or `)
-            "fences": markdown_fences,                          # Bool
-            "listItemIndent": markdown_list_indent,             # int or "tab"
-                                                                # or "mixed"
-            "looseTable": markdown_loose_tables,                # Bool
-            "spacedTable": markdown_spaced_tables,              # Bool
-            "incrementListMarker": markdown_list_increment,     # Bool
-            "rule": markdown_horizontal_rule,                   # - or * or _
-            "ruleSpaces": markdown_horizontal_rule_spaces,      # Bool
-            "ruleRepetition": markdown_horizontal_rule_repeat,  # int
+        remark_configs_settings = {
+            'bullet': bullets,                          # - or *
+            'closeAtx': closed_headings,                # Bool
+            'setext': setext_headings,                  # Bool
+            'emphasis': emphasis,                       # char (_ or *)
+            'strong': strong,                           # char (_ or *)
+            'entities': encode_entities,                # Bool
+            'fence': codefence,                         # char (~ or `)
+            'fences': fences,                           # Bool
+            'listItemIndent': list_indent,              # int or "tab"
+                                                        # or "mixed"
+            'looseTable': loose_tables,                 # Bool
+            'spacedTable': spaced_tables,               # Bool
+            'incrementListMarker': list_increment,      # Bool
+            'rule': horizontal_rule,                    # - or * or _
+            'ruleSpaces': horizontal_rule_spaces,       # Bool
+            'ruleRepetition': horizontal_rule_repeat,   # int
         }
+        remark_configs_plugins = {}
 
-        config_json = json.dumps(remark_configs)
+        if max_line_length:
+            remark_configs_plugins['maximumLineLength'] = max_line_length
+
+        config_json = json.dumps(remark_configs_settings)
         # Remove { and } as remark adds them on its own
         settings = config_json[1:-1]
-        return '--no-color', '--quiet', '--setting', settings
+
+        args = ['--no-color', '--quiet', '--setting', settings]
+
+        if remark_configs_plugins:
+            config_json = json.dumps(remark_configs_plugins)
+            plugins = 'lint=' + config_json[1:-1]
+            args += ['--use', plugins]
+
+        return args
+
+    def process_output(self, output, filename, file):
+        stdout, stderr = output
+        yield from self.process_output_corrected(stdout, filename, file,
+                                                 RESULT_SEVERITY.NORMAL,
+                                                 'The text does not comply'
+                                                 ' to the set style.')
+        yield from self.process_output_regex(stderr, filename, file,
+                                             self._output_regex)

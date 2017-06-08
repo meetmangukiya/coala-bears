@@ -1,4 +1,5 @@
 from coalib.bearlib.abstractions.Linter import linter
+from dependency_management.requirements.PipRequirement import PipRequirement
 
 
 @linter(executable='cppclean',
@@ -13,7 +14,12 @@ class CPPCleanBear:
     <https://github.com/myint/cppclean#features>.
     """
 
-    LANGUAGES = {"C++"}
+    LANGUAGES = {'C++'}
+    REQUIREMENTS = {PipRequirement('cppclean', '0.12.0')}
+    AUTHORS = {'The coala developers'}
+    AUTHORS_EMAILS = {'coala-devel@googlegroups.com'}
+    LICENSE = 'AGPL-3.0'
+    CAN_DETECT = {'Smell', 'Unused Code', 'Security'}
 
     @staticmethod
     def create_arguments(filename, file, config_file):

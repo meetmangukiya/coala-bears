@@ -31,10 +31,13 @@ site
 node_modules
 *.log
 *.jar
+.bundle
 .vendor
+vendor
 Goopfile.lock
 Gemfile.lock
 .Rhistory
 .Rprofile
 *.swp
 venv
+bears/upload/

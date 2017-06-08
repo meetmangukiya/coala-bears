@@ -1,13 +1,18 @@
 from bears.configfiles.DockerfileLintBear import DockerfileLintBear
-from tests.LocalBearTestHelper import verify_local_bear
+from coalib.testing.LocalBearTestHelper import verify_local_bear
 
 good_file = """
 FROM ubuntu:14.04
+MAINTAINER coala
+LABEL Name coala-docker
+LABEL Version 0.1
 
 # Install basic tools
 RUN apt-get -y -qq update
 RUN apt-get -y -qq upgrade
-""".splitlines(keepends=True)
+EXPOSE 5432
+CMD ["/bin/bash", "coala"]
+"""
 
 
 bad_file = """
@@ -16,7 +21,7 @@ FROM ubuntu:14.04
 # Install basic tools
 apt-get -y -qq update
 apt-get -y -qq upgrade
-""".splitlines(keepends=True)
+"""
 
 
 DockerfileLintBearTest = verify_local_bear(DockerfileLintBear,
